@@ -51,9 +51,34 @@ def main():
 
             prev_phone = p
 
-    json.dump([dataclasses.asdict(s) for s in stimuli], open(os.path.join(args.out_dir, 'stimuli.json'), 'w'))
+    # json.dump([dataclasses.asdict(s) for s in stimuli], open(os.path.join(args.out_dir, 'stimuli.json'), 'w'))
 
+    N = len(stimuli)
     # generate PaT triplets
+    PaT_triplets = []
+    for i in range(1):
+        A = stimuli[i]
+        Bs = []
+        Xs = []
+        for j in range(N):
+            if i == j:
+                continue
+
+            s = stimuli[j]
+            n_diff_phones = (A.p1.phone != s.p1.phone) + (A.p2.phone != s.p2.phone)
+            if n_diff_phones == 1 and A.p1.spk == s.p1.spk:
+                Bs.append(s)
+            elif n_diff_phones == 0 and A.p1.spk != s.p1.spk:
+                Xs.append(s)
+
+        for b in Bs:
+            for x in Xs:
+                PaT_triplets.append([A, b, x])
+
+    json.dump(
+        [dataclasses.asdict(s) for pat in PaT_triplets for s in pat],
+        open(os.path.join(args.out_dir, 'PaT.json'), 'w')
+    )
 
 
 if __name__ == '__main__':
