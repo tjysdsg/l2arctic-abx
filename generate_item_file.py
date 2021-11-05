@@ -1,6 +1,4 @@
 import json
-
-import numpy as np
 import os
 import argparse
 import dataclasses
@@ -53,32 +51,56 @@ def main():
 
     # json.dump([dataclasses.asdict(s) for s in stimuli], open(os.path.join(args.out_dir, 'stimuli.json'), 'w'))
 
+    out_file = open(os.path.join(args.out_dir, 'abx.txt'), 'w')
+
     N = len(stimuli)
-    # generate PaT triplets
-    PaT_triplets = []
-    for i in range(1):
+    for i in range(N):
         A = stimuli[i]
-        Bs = []
-        Xs = []
+        PaT_Bs = []
+        PaT_Xs = []
+        PaC_Bs = []
+        PaC_Xs = []
+        TaP_Bs = []
+        TaP_Xs = []
         for j in range(N):
             if i == j:
                 continue
 
+            # 1. find B and X stimuli
             s = stimuli[j]
             n_diff_phones = (A.p1.phone != s.p1.phone) + (A.p2.phone != s.p2.phone)
+
+            # PaT
             if n_diff_phones == 1 and A.p1.spk == s.p1.spk:
-                Bs.append(s)
+                PaT_Bs.append(s)
             elif n_diff_phones == 0 and A.p1.spk != s.p1.spk:
-                Xs.append(s)
+                PaT_Xs.append(s)
 
-        for b in Bs:
-            for x in Xs:
-                PaT_triplets.append([A, b, x])
+            # PaC
+            if n_diff_phones == 1 and A.p1.spk == s.p1.spk:
+                PaC_Bs.append(s)
+            elif n_diff_phones == 2 and A.p1.spk == s.p1.spk:
+                PaC_Xs.append(s)
 
-    json.dump(
-        [dataclasses.asdict(s) for pat in PaT_triplets for s in pat],
-        open(os.path.join(args.out_dir, 'PaT.json'), 'w')
-    )
+            # TaP
+            if n_diff_phones == 0 and A.p1.spk != s.p1.spk:
+                TaP_Bs.append(s)
+            elif n_diff_phones == 1 and A.p1.spk == s.p1.spk:
+                TaP_Xs.append(s)
+
+        # 2. generate pairs to list
+        for b in PaT_Bs:
+            for x in PaT_Xs:
+                data = [dataclasses.asdict(e) for e in [A, b, x]]
+                out_file.write(f'{json.dumps(data)}\n')
+        for b in PaC_Bs:
+            for x in PaC_Xs:
+                data = [dataclasses.asdict(e) for e in [A, b, x]]
+                out_file.write(f'{json.dumps(data)}\n')
+        for b in TaP_Bs:
+            for x in TaP_Xs:
+                data = [dataclasses.asdict(e) for e in [A, b, x]]
+                out_file.write(f'{json.dumps(data)}\n')
 
 
 if __name__ == '__main__':
