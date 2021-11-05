@@ -1,10 +1,11 @@
 import argparse
 import os
 import librosa
-import soundfile
+import numpy as np
 
 SR = 44100
 HOP_LENGTH = 160
+SUBSAMPLE_RATIO = 2  # VQ-VAE half the frequency
 
 
 def get_args():
@@ -27,7 +28,9 @@ def main():
             path = os.path.join(args.data_dir, f'{utt}.npy')
             code = np.load(path)
 
-            start_frame, end_frame = librosa.time_to_frames([start, end], sr=SR, hop_length=HOP_LENGTH)
+            start_frame, end_frame = (librosa.time_to_frames(
+                [start, end], sr=SR, hop_length=HOP_LENGTH
+            ) / SUBSAMPLE_RATIO).astype('int')
             code = code[start_frame: end_frame]
 
             np.save(os.path.join(args.out_dir, f'{utt}_{start}_{phone}.npy'), code)
