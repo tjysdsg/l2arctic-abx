@@ -26,7 +26,11 @@ def main():
             start, end = float(start), float(end)
 
             path = os.path.join(args.data_dir, f'{utt}.npy')
-            code = np.load(path)
+            try:
+                code = np.load(path)
+            except FileNotFoundError as e:
+                print(e)
+                continue
 
             start_frame, end_frame = (librosa.time_to_frames(
                 [start, end], sr=SR, hop_length=HOP_LENGTH
