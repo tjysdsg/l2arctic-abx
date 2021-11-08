@@ -1,8 +1,11 @@
-import json
 import os
 import argparse
 import dataclasses
 from typing import List
+import numpy as np
+from cut_codes import cut_code
+
+MAX_PAIRS_PER_A = 20
 
 
 @dataclasses.dataclass
@@ -19,6 +22,27 @@ class Stimuli:
     p1: Phone
     p2: Phone
 
+    def get_start_end(self):
+        assert self.p1.start < self.p2.end
+        return self.p1.start, self.p2.end
+
+    def get_utt(self):
+        assert self.p1.utt == self.p2.utt
+        return self.p1.utt
+
+    def get_phone_pair(self):
+        return [self.p1.phone, self.p2.phone]
+
+    def get_phone_pair_str(self):
+        return '_'.join(self.get_phone_pair())
+
+    def to_stimuli_id(self):
+        """
+        utt_phone1_phone2_start_end
+        """
+        start, end = self.get_start_end()
+        return f'{self.get_utt()}_{self.get_phone_pair_str()}_{start}_{end}'
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -26,6 +50,32 @@ def get_args():
     parser.add_argument('--phone-alignment', type=str, default='phone_alignment.txt')
     parser.add_argument('--out-dir', type=str, default='exp')
     return parser.parse_args()
+
+
+def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str):
+    for e in abx:
+        start, end = e.get_start_end()
+        utt = e.get_utt()
+        file = os.path.join(encode_dir, f'{utt}.npy')
+        code = cut_code(file, start, end)
+        np.save(os.path.join(out_dir, f'{e.to_stimuli_id()}.npy'), code)
+
+
+def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: List[Stimuli]):
+    n = 0
+    np.random.shuffle(bs)
+    np.random.shuffle(xs)
+    for b in bs:
+        for x in xs:
+            if n < MAX_PAIRS_PER_A:
+                try:
+                    save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)
+                except FileNotFoundError as e:
+                    print(e)
+                    continue
+
+                out_file.write(f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n')
+                n += 1
 
 
 def main():
@@ -54,7 +104,9 @@ def main():
 
     # json.dump([dataclasses.asdict(s) for s in stimuli], open(os.path.join(args.out_dir, 'stimuli.json'), 'w'))
 
-    out_file = open(os.path.join(args.out_dir, 'abx.txt'), 'w')
+    PaT_file = open(os.path.join(args.out_dir, 'PaT.txt'), 'w')
+    PaC_file = open(os.path.join(args.out_dir, 'PaC.txt'), 'w')
+    TaP_file = open(os.path.join(args.out_dir, 'TaP.txt'), 'w')
 
     N = len(stimuli)
     for i in range(N):
@@ -91,19 +143,10 @@ def main():
             elif n_diff_phones == 1 and A.p1.spk == s.p1.spk:
                 TaP_Xs.append(s)
 
-        # 2. generate pairs to list
-        for b in PaT_Bs:
-            for x in PaT_Xs:
-                data = [dataclasses.asdict(e) for e in [A, b, x]]
-                out_file.write(f'{json.dumps(data)}\n')
-        for b in PaC_Bs:
-            for x in PaC_Xs:
-                data = [dataclasses.asdict(e) for e in [A, b, x]]
-                out_file.write(f'{json.dumps(data)}\n')
-        for b in TaP_Bs:
-            for x in TaP_Xs:
-                data = [dataclasses.asdict(e) for e in [A, b, x]]
-                out_file.write(f'{json.dumps(data)}\n')
+        # 2. generate pairs and cut codes
+        generate_from_bx_list(args, A, PaT_file, PaT_Bs, PaT_Xs)
+        generate_from_bx_list(args, A, PaC_file, PaC_Bs, PaC_Xs)
+        generate_from_bx_list(args, A, TaP_file, TaP_Bs, TaP_Xs)
 
 
 if __name__ == '__main__':

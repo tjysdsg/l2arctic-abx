@@ -16,6 +16,15 @@ def get_args():
     return parser.parse_args()
 
 
+def cut_code(path: str, start: float, end: float):
+    code = np.load(path)
+    start_frame, end_frame = (librosa.time_to_frames(
+        [start, end], sr=SR, hop_length=HOP_LENGTH
+    ) / SUBSAMPLE_RATIO).astype('int')
+
+    return code[start_frame: end_frame]
+
+
 def main():
     args = get_args()
     os.makedirs(args.out_dir, exist_ok=True)
@@ -27,15 +36,10 @@ def main():
 
             path = os.path.join(args.data_dir, f'{utt}.npy')
             try:
-                code = np.load(path)
+                code = cut_code(path, start, end)
             except FileNotFoundError as e:
                 print(e)
                 continue
-
-            start_frame, end_frame = (librosa.time_to_frames(
-                [start, end], sr=SR, hop_length=HOP_LENGTH
-            ) / SUBSAMPLE_RATIO).astype('int')
-            code = code[start_frame: end_frame]
 
             np.save(os.path.join(args.out_dir, f'{utt}_{start}_{phone}.npy'), code)
 
