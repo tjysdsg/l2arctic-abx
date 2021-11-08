@@ -42,8 +42,11 @@ def main():
             spk, _ = utt.split('-')
 
             p = Phone(utt=utt, phone=phone, spk=spk, start=start, end=end)
+            # 2-gram should be from the same utterance
+            # we also avoid gap in two phones
             if prev_phone is not None \
-                    and prev_phone.utt == p.utt:  # 2-gram should be from the same utterance
+                    and prev_phone.utt == p.utt \
+                    and prev_phone.end == p.start:
                 s = Stimuli(p1=prev_phone, p2=p)
                 stimuli.append(s)
 
