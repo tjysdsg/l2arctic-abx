@@ -3,7 +3,7 @@ import os
 import librosa
 import numpy as np
 
-SR = 44100
+SR = 16000
 HOP_LENGTH = 160
 SUBSAMPLE_RATIO = 2  # VQ-VAE half the frequency
 

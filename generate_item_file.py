@@ -58,6 +58,8 @@ def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str):
         utt = e.get_utt()
         file = os.path.join(encode_dir, f'{utt}.npy')
         code = cut_code(file, start, end)
+        if code.shape[0] <= 1:
+            raise RuntimeError('Code too short')
         np.save(os.path.join(out_dir, f'{e.to_stimuli_id()}.npy'), code)
 
 
@@ -72,6 +74,8 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
                     save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)
                 except FileNotFoundError as e:
                     print(e)
+                    continue
+                except RuntimeError:
                     continue
 
                 out_file.write(f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n')
