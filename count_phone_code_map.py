@@ -38,7 +38,7 @@ def main():
                 continue
 
             for ci in code_idx:
-                code2phones.setdefault(ci, []).append(phone)
+                code2phones.setdefault(int(ci), []).append(phone)
 
     # get top phone counts of each code
     code2counts = {}
@@ -46,7 +46,7 @@ def main():
         vals, counts = np.unique(phones, return_counts=True)
         argidx = np.argsort(counts)[::-1]
         n = len(vals)
-        code2counts[ci] = {vals[argidx[i]]: counts[argidx[i]] for i in range(n)}
+        code2counts[ci] = {vals[argidx[i]]: int(counts[argidx[i]]) for i in range(n)}
 
     json.dump(code2counts, open(os.path.join(out_dir, 'code2counts.json'), 'w'), indent='  ')
 
