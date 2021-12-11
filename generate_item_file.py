@@ -91,6 +91,11 @@ def main():
     with open(args.phone_alignment) as f:
         for line in f:
             utt, start, end, phone = line.strip('\n').split()
+
+            # skip non-existing utterances
+            if not os.path.exists(os.path.join(args.encode_dir, f'{utt}.npy')):
+                continue
+
             start, end = float(start), float(end)
 
             spk, _ = utt.split('-')
