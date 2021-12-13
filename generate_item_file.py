@@ -89,7 +89,9 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
                 thread2out_line[
                     executor.submit(worker, [a, b, x], args.encode_dir, args.out_dir)
                 ] = f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n'
-            n += 1
+                n += 1
+            else:
+                break
 
     for future in as_completed(thread2out_line):
         out_file.write(thread2out_line[future])
@@ -176,9 +178,15 @@ def main():
                 TaP_Xs.append(s)
 
         # 2. generate pairs and cut codes
-        generate_from_bx_list(args, A, PaT_file, PaT_Bs, PaT_Xs)
-        generate_from_bx_list(args, A, PaC_file, PaC_Bs, PaC_Xs)
-        generate_from_bx_list(args, A, TaP_file, TaP_Bs, TaP_Xs)
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        executor = ProcessPoolExecutor(max_workers=3)
+        processes = [
+            executor.submit(generate_from_bx_list, args, A, PaT_file, PaT_Bs, PaT_Xs),
+            executor.submit(generate_from_bx_list, args, A, PaC_file, PaC_Bs, PaC_Xs),
+            executor.submit(generate_from_bx_list, args, A, TaP_file, TaP_Bs, TaP_Xs),
+        ]
+        for future in as_completed(processes):
+            pass
 
 
 if __name__ == '__main__':
