@@ -46,9 +46,10 @@ class Stimuli:
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--encode-dir', type=str, default=r'E:\repos\vqvae_encode_test')
-    parser.add_argument('--phone-alignment', type=str, default='phone_alignment.txt')
-    parser.add_argument('--out-dir', type=str, default='exp')
+    parser.add_argument('--encode-dir', type=str)
+    parser.add_argument('--phone-alignment', type=str)
+    parser.add_argument('--utt2spk', type=str, default=None)
+    parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
 
@@ -86,6 +87,13 @@ def main():
     args = get_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
+    utt2spk = {}
+    if args.utt2spk is not None:
+        with open(args.utt2spk) as f:
+            for line in f:
+                utt, spk = line.strip('\n').split()
+                utt2spk[utt] = spk
+
     prev_phone: Phone = None
     stimuli: List[Stimuli] = []
     with open(args.phone_alignment) as f:
@@ -98,7 +106,10 @@ def main():
 
             start, end = float(start), float(end)
 
-            spk, _ = utt.split('-')
+            if args.utt2spk is not None:
+                spk = utt2spk[utt]
+            else:
+                spk, _ = utt.split('-')
 
             p = Phone(utt=utt, phone=phone, spk=spk, start=start, end=end)
             # 2-gram should be from the same utterance

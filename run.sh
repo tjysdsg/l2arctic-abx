@@ -1,6 +1,13 @@
 # generate PaT, PaC, TaP triplets
+# python generate_item_file.py \
+#   --encode-dir=/home/storage15/tangjiyang/DAU-MD/exp/zerospeech_vae/encode_librispeech960_l2arctic \
+#   --phone-alignment=phone_alignment.txt \
+#   --out-dir=exp
+
+# test on librispeech test clean:
 python generate_item_file.py \
-  --encode-dir=/home/storage15/tangjiyang/DAU-MD/exp/zerospeech_vae/encode_librispeech960_l2arctic \
+  --encode-dir=/home/storage15/tangjiyang/DAU-MD/exp/zerospeech_vae/encode_librispeech960_LS-test-clean \
+  --utt2spk=/home/storage15/tangjiyang/librispeech_ali_test_clean/utt2spk \
   --phone-alignment=phone_alignment.txt \
   --out-dir=exp
 
