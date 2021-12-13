@@ -72,12 +72,16 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
 
     # parallel execution of `save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)` with exceptions
     def worker(*_args):
+        ret = True
         try:
             save_abx_to_files(*_args)
         except FileNotFoundError as e:
             print(e)
+            ret = False
         except RuntimeError:
-            pass
+            ret = False
+
+        return ret
 
     executor = ThreadPoolExecutor(max_workers=N_JOBS)
     thread2out_line = {}
@@ -94,7 +98,8 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
                 break
 
     for future in as_completed(thread2out_line):
-        out_file.write(thread2out_line[future])
+        if future.result():
+            out_file.write(thread2out_line[future])
 
 
 def main():
