@@ -64,8 +64,9 @@ def main():
                 )
 
     mean_err_spk = [np.mean(err) for _, err in spk2error.items()]
-    abx_score = np.mean(mean_err_spk)
-    print(abx_score * 100)
+    abx_score = 100 * np.mean(mean_err_spk)
+    with open(os.path.join(args.data_dir, 'abx_score.txt'), 'w') as f:
+        f.write(f'{abx_score * 100}\n')
 
 
 if __name__ == '__main__':
