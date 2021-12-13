@@ -6,6 +6,7 @@ import numpy as np
 from cut_codes import cut_code
 
 MAX_PAIRS_PER_A = 20
+N_JOBS = 16
 
 
 @dataclasses.dataclass
@@ -65,22 +66,33 @@ def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str):
 
 
 def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: List[Stimuli]):
-    n = 0
     np.random.shuffle(bs)
     np.random.shuffle(xs)
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # parallel execution of `save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)` with exceptions
+    def worker(*_args):
+        try:
+            save_abx_to_files(*_args)
+        except FileNotFoundError as e:
+            print(e)
+        except RuntimeError:
+            pass
+
+    executor = ThreadPoolExecutor(max_workers=N_JOBS)
+    thread2out_line = {}
+
+    n = 0
     for b in bs:
         for x in xs:
             if n < MAX_PAIRS_PER_A:
-                try:
-                    save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)
-                except FileNotFoundError as e:
-                    print(e)
-                    continue
-                except RuntimeError:
-                    continue
+                thread2out_line[
+                    executor.submit(worker, [a, b, x], args.encode_dir, args.out_dir)
+                ] = f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n'
+            n += 1
 
-                out_file.write(f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n')
-                n += 1
+    for future in as_completed(thread2out_line):
+        out_file.write(thread2out_line[future])
 
 
 def main():
