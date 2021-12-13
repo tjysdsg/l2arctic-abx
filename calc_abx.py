@@ -13,7 +13,7 @@ EXPECTED_SIGN = {
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data-dir', type=str, default=r'exp')
+    parser.add_argument('--data-dir', type=str)
     return parser.parse_args()
 
 
