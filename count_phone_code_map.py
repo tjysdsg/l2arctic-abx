@@ -7,12 +7,9 @@ from cut_codes import cut_code
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--encode-dir', type=str,
-        default=r'/home/storage15/tangjiyang/DAU-MD/exp/zerospeech_vae/encode_i'
-    )
-    parser.add_argument('--phone-alignment', type=str, default='phone_alignment.txt')
-    parser.add_argument('--out-dir', type=str, default='exp')
+    parser.add_argument('--encode-dir', type=str)
+    parser.add_argument('--phone-alignment', type=str)
+    parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
 
