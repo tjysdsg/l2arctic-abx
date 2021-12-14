@@ -183,15 +183,9 @@ def main():
                 TaP_Xs.append(s)
 
         # 2. generate pairs and cut codes
-        from concurrent.futures import ProcessPoolExecutor, as_completed
-        executor = ProcessPoolExecutor(max_workers=3)
-        processes = [
-            executor.submit(generate_from_bx_list, args, A, PaT_file, PaT_Bs, PaT_Xs),
-            executor.submit(generate_from_bx_list, args, A, PaC_file, PaC_Bs, PaC_Xs),
-            executor.submit(generate_from_bx_list, args, A, TaP_file, TaP_Bs, TaP_Xs),
-        ]
-        for future in as_completed(processes):
-            pass
+        generate_from_bx_list(args, A, PaT_file, PaT_Bs, PaT_Xs)
+        generate_from_bx_list(args, A, PaC_file, PaC_Bs, PaC_Xs)
+        generate_from_bx_list(args, A, TaP_file, TaP_Bs, TaP_Xs)
 
 
 if __name__ == '__main__':
