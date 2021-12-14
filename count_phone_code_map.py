@@ -57,8 +57,6 @@ def main():
             if not os.path.exists(os.path.join(args.encode_dir, f'{utt}.npy')):
                 continue
 
-            spk, _ = utt.split('-')
-
             file = os.path.join(encode_dir, f'{utt}.npy')
             try:
                 code_idx = cut_code(file, start, end)
