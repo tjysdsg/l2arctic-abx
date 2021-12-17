@@ -63,6 +63,9 @@ def main():
                     (-1 if dist_xa - dist_xb < 0 else 1) != EXPECTED_SIGN[triplet_type]
                 )
 
+    import json
+    json.dump(spk2error, open('shit.json', 'w'), indent='  ')
+
     mean_err_spk = [np.mean(err) for _, err in spk2error.items()]
     abx_score = 100 * np.mean(mean_err_spk)
     with open(os.path.join(args.data_dir, 'abx_score.txt'), 'w') as f:
