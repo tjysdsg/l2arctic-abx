@@ -119,6 +119,9 @@ def main():
         for line in f:
             utt, start, end, phone = line.strip('\n').split()
 
+            if phone in ['SIL', 'sil']:
+                continue
+
             # skip non-existing utterances
             if not os.path.exists(os.path.join(args.encode_dir, f'{utt}.npy')):
                 continue
