@@ -5,6 +5,8 @@ from typing import List
 import numpy as np
 from cut_codes import cut_code
 
+# about 8000 samples for PaT, PaC, TaP each
+MAX_NUM_OF_A = 400
 MAX_PAIRS_PER_A = 20
 N_JOBS = 16
 
@@ -152,7 +154,8 @@ def main():
     TaP_file = open(os.path.join(args.out_dir, 'TaP.txt'), 'w')
 
     N = len(stimuli)
-    for i in range(N):
+    np.random.shuffle(stimuli)
+    for i in range(MAX_NUM_OF_A):
         A = stimuli[i]
         PaT_Bs = []
         PaT_Xs = []
