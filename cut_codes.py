@@ -3,7 +3,6 @@ import os
 import numpy as np
 
 SR = 16000
-HOP_LENGTH = 160
 
 
 def get_args():
