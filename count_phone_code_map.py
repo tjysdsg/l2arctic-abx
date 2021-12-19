@@ -59,6 +59,7 @@ def main():
 
             file = os.path.join(encode_dir, f'{utt}.npy')
             try:
+                # FIXME
                 code_idx = cut_code(file, start, end)
             except FileNotFoundError as e:
                 print(e)

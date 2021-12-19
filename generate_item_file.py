@@ -50,16 +50,17 @@ def get_args():
     parser.add_argument('--encode-dir', type=str)
     parser.add_argument('--phone-alignment', type=str)
     parser.add_argument('--utt2spk', type=str, default=None)
+    parser.add_argument('--freq', type=int)
     parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
 
-def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str):
+def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str, freq: int):
     for e in abx:
         start, end = e.get_start_end()
         utt = e.get_utt()
         file = os.path.join(encode_dir, f'{utt}.npy')
-        code = cut_code(file, start, end)
+        code = cut_code(file, start, end, freq)
         if code.shape[0] <= 1:
             raise RuntimeError('Code too short')
         np.save(os.path.join(out_dir, f'{e.to_stimuli_id()}.npy'), code)
@@ -91,7 +92,7 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
         for x in xs:
             if n < MAX_PAIRS_PER_A:
                 thread2out_line[
-                    executor.submit(worker, [a, b, x], args.encode_dir, args.out_dir)
+                    executor.submit(worker, [a, b, x], args.encode_dir, args.out_dir, args.freq)
                 ] = f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n'
                 n += 1
             else:

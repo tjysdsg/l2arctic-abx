@@ -1,27 +1,23 @@
 import argparse
 import os
-import librosa
 import numpy as np
 
 SR = 16000
 HOP_LENGTH = 160
-SUBSAMPLE_RATIO = 2  # VQ-VAE half the frequency
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data-dir', type=str, default=r'')
-    parser.add_argument('--phone-alignment', type=str, default='phone_alignment.txt')
-    parser.add_argument('--out-dir', type=str, default='exp')
+    parser.add_argument('--data-dir', type=str)
+    parser.add_argument('--phone-alignment', type=str)
+    parser.add_argument('--freq', type=int)
+    parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
 
-def cut_code(path: str, start: float, end: float):
+def cut_code(path: str, start: float, end: float, freq: int):
     code = np.load(path)
-    start_frame, end_frame = (librosa.time_to_frames(
-        [start, end], sr=SR, hop_length=HOP_LENGTH
-    ) / SUBSAMPLE_RATIO).astype('int')
-
+    start_frame, end_frame = int(np.round(start * freq)), int(np.round(end * freq))
     return code[start_frame: end_frame]
 
 
@@ -36,7 +32,7 @@ def main():
 
             path = os.path.join(args.data_dir, f'{utt}.npy')
             try:
-                code = cut_code(path, start, end)
+                code = cut_code(path, start, end, args.freq)
             except FileNotFoundError as e:
                 print(e)
                 continue
