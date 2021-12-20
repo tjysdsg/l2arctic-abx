@@ -1,0 +1,30 @@
+[
+  {
+    "kernel_size": 10,
+    "stride": 5
+  },
+  {
+    "kernel_size": 3,
+    "stride": 2
+  },
+  {
+    "kernel_size": 3,
+    "stride": 2
+  },
+  {
+    "kernel_size": 3,
+    "stride": 2
+  },
+  {
+    "kernel_size": 3,
+    "stride": 2
+  },
+  {
+    "kernel_size": 2,
+    "stride": 2
+  },
+  {
+    "kernel_size": 2,
+    "stride": 2
+  }
+]
