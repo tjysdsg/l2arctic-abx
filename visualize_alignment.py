@@ -1,7 +1,10 @@
 import dataclasses
+import json
+import math
 import os
 import argparse
 import numpy as np
+from utils import conv_align
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 
@@ -14,7 +17,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir', type=str)
     parser.add_argument('--phone-alignment', type=str)
-    parser.add_argument('--freq', type=int)
+    parser.add_argument('--model-config', type=str)
+    parser.add_argument('--sample-rate', type=int, default=None)
+    parser.add_argument('--hop-length', type=int, default=None)
     parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
@@ -44,7 +49,13 @@ def main():
                 continue
 
             start, end = float(start), float(end)
-            start_frame, end_frame = int(np.round(start * args.freq)), int(np.round(end * args.freq))
+            if args.sample_rate is not None:
+                start, end = start * args.sample_rate, end * args.sample_rate
+            if args.hop_length is not None:
+                start, end = math.floor(start / args.hop_length), math.floor(end / args.hop_length)
+
+            model_config = json.load(open(args.model_config))
+            start_frame, end_frame = conv_align(start, model_config), conv_align(end, model_config)
             code = np.load(os.path.join(data_dir, f'{utt}.npy'))
 
             p = Phone(utt, phone, start_frame, end_frame)
