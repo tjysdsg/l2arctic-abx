@@ -10,7 +10,7 @@ import matplotlib as mpl
 
 mpl.rc("savefig", dpi=300)
 
-MAX_PAIRS_PER_A = 20
+MAX_FEATURE_DIM = 128
 
 
 def get_args():
@@ -64,20 +64,25 @@ def main():
 
     for utt, phones in utt2phones.items():
         code = utt2code[utt].T
-        ymax = code.shape[0]
+        code = code[:MAX_FEATURE_DIM]
 
-        plt.figure(figsize=(20, 20))
-        plt.imshow(code)
-        plt.title('A')
+        # clip values
+        vmin = np.quantile(code, 0.1)
+        vmax = np.quantile(code, 0.9)
+        code = np.clip(code, vmin, vmax)
+
+        plt.figure(figsize=(20, 15))
+        plt.imshow(code, cmap='viridis')
+        plt.title(f'Note that only the first {MAX_FEATURE_DIM} values along the feature dimension are shown')
         plt.xlabel('time')
         plt.ylabel('code')
+        plt.colorbar(orientation='horizontal')
 
-        boundaries = []
+        prev_end_frame = -100
         for p in phones:  # type: Phone
-            boundaries.append(p.start_frame)
-            boundaries.append(p.end_frame)
-
-        plt.vlines(boundaries, 0, ymax)
+            if abs(p.start_frame - prev_end_frame) > 1:
+                plt.gca().axvline(p.start_frame, ymin=0, ymax=1, lw=1, color='white')
+            plt.gca().axvline(p.end_frame, ymin=0, ymax=1, lw=1, color='white')
 
         plt.savefig(os.path.join(out_dir, f'{utt}.png'))
         plt.close('all')
