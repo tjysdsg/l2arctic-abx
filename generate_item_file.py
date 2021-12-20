@@ -1,13 +1,15 @@
 import os
+import json
 import argparse
 import dataclasses
 from typing import List
 import numpy as np
-from cut_codes import cut_code
+from utils import cut_code
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# about 8000 samples for PaT, PaC, TaP each
-MAX_NUM_OF_A = 400
-MAX_PAIRS_PER_A = 20
+# about 10000 samples for PaT, PaC, TaP each
+MAX_NUM_OF_A = 100
+MAX_PAIRS_PER_A = 100
 N_JOBS = 16
 
 
@@ -52,26 +54,32 @@ def get_args():
     parser.add_argument('--encode-dir', type=str)
     parser.add_argument('--phone-alignment', type=str)
     parser.add_argument('--utt2spk', type=str, default=None)
-    parser.add_argument('--freq', type=int)
+    parser.add_argument('--model-config', type=str)
+    parser.add_argument('--sample-rate', type=int, default=None)
+    parser.add_argument('--hop-length', type=int, default=None)
     parser.add_argument('--out-dir', type=str)
     return parser.parse_args()
 
 
-def save_abx_to_files(abx: List[Stimuli], encode_dir: str, out_dir: str, freq: int):
+def save_abx_to_files(
+        abx: List[Stimuli], encode_dir: str, out_dir: str, model_config, sample_rate: int = None,
+        hop_length: int = None
+):
     for e in abx:
         start, end = e.get_start_end()
         utt = e.get_utt()
         file = os.path.join(encode_dir, f'{utt}.npy')
-        code = cut_code(file, start, end, freq)
+        code = cut_code(file, start, end, model_config, sample_rate, hop_length)
         if code.shape[0] <= 1:
             raise RuntimeError('Code too short')
         np.save(os.path.join(out_dir, f'{e.to_stimuli_id()}.npy'), code)
 
 
 def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: List[Stimuli]):
+    model_config = json.load(open(args.model_config))
+
     np.random.shuffle(bs)
     np.random.shuffle(xs)
-    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # parallel execution of `save_abx_to_files([a, b, x], args.encode_dir, args.out_dir)` with exceptions
     def worker(*_args):
@@ -94,7 +102,10 @@ def generate_from_bx_list(args, a: Stimuli, out_file, bs: List[Stimuli], xs: Lis
         for x in xs:
             if n < MAX_PAIRS_PER_A:
                 thread2out_line[
-                    executor.submit(worker, [a, b, x], args.encode_dir, args.out_dir, args.freq)
+                    executor.submit(
+                        worker, [a, b, x],
+                        args.encode_dir, args.out_dir, model_config, args.sample_rate, args.hop_length
+                    )
                 ] = f'{a.to_stimuli_id()} {b.to_stimuli_id()} {x.to_stimuli_id()}\n'
                 n += 1
             else:

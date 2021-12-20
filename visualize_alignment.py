@@ -4,7 +4,7 @@ import math
 import os
 import argparse
 import numpy as np
-from utils import conv_align
+from utils import convert_time_to_frame_idx
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 
@@ -49,13 +49,12 @@ def main():
                 continue
 
             start, end = float(start), float(end)
-            if args.sample_rate is not None:
-                start, end = start * args.sample_rate, end * args.sample_rate
-            if args.hop_length is not None:
-                start, end = math.floor(start / args.hop_length), math.floor(end / args.hop_length)
-
             model_config = json.load(open(args.model_config))
-            start_frame, end_frame = conv_align(start, model_config), conv_align(end, model_config)
+            start_frame, end_frame = (
+                convert_time_to_frame_idx(start, model_config, args.sample_rate, args.hop_length),
+                convert_time_to_frame_idx(end, model_config, args.sample_rate, args.hop_length)
+            )
+
             code = np.load(os.path.join(data_dir, f'{utt}.npy'))
 
             p = Phone(utt, phone, start_frame, end_frame)
