@@ -167,6 +167,9 @@ def main():
     N = len(stimuli)
     np.random.shuffle(stimuli)
     for i in range(MAX_NUM_OF_A):
+        if i >= N:
+            break
+
         A = stimuli[i]
         PaT_Bs = []
         PaT_Xs = []
