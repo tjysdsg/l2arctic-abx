@@ -19,6 +19,19 @@ def get_args():
     return parser.parse_args()
 
 
+def tsne(out_path: str, encodings: list, labels: list):
+    encodings: np.ndarray = np.vstack(encodings)
+    model = TSNE(n_components=2, random_state=42, n_jobs=32)
+    model = model.fit(encodings)
+    tsne = model.transform(encodings)
+
+    assert len(tsne) == len(labels)
+
+    # scatter
+    fig = px.scatter(x=tsne[:, 0], y=tsne[:, 1], color=labels, text=labels)
+    fig.write_html(out_path)
+
+
 def main():
     args = get_args()
     encode_dir = args.encode_dir
@@ -26,6 +39,8 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
 
     n_utts = 0
+    all_encodings = []
+    all_labels = []
     encodings: list = []
     labels = []
     prev_utt = None
@@ -37,17 +52,11 @@ def main():
             utt, start, end, phone = line.strip('\n').split()
 
             if prev_utt != utt and prev_utt is not None:
-                encodings: np.ndarray = np.vstack(encodings)
-                print(f'{utt}: size of training data:', encodings.shape)
-                model = TSNE(n_components=2, random_state=42, n_jobs=32)
-                model = model.fit(encodings)
-                tsne = model.transform(encodings)
-
-                assert len(tsne) == len(labels)
-
-                # scatter
-                fig = px.scatter(x=tsne[:, 0], y=tsne[:, 1], color=labels, text=labels)
-                fig.write_html(os.path.join(out_dir, f"tsne_{prev_utt}.html"))
+                tsne(
+                    os.path.join(out_dir, f"tsne_{prev_utt}.html"),
+                    encodings,
+                    labels,
+                )
 
                 # reset
                 n_utts += 1
@@ -74,7 +83,16 @@ def main():
             labels += [phone for _ in range(end_frame - start_frame)]
             encodings.append(code)
 
+            all_encodings.append(code)
+            all_labels += [phone for _ in range(end_frame - start_frame)]
+
             prev_utt = utt
+
+    tsne(
+        os.path.join(out_dir, f"tsne_all.html"),
+        all_encodings,
+        all_labels,
+    )
 
 
 if __name__ == '__main__':
